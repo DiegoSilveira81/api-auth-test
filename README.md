@@ -42,7 +42,7 @@ O servidor iniciará em `http://localhost:6666` (pode ajustar a porta no `index.
 - **URL**: `http://localhost:6666/api/basic/data`
 - **Autenticação**: Basic Auth
   - **Username**: `admin`
-  - **Password**: `123456`
+  - **Password**: `password1234`
 
 ---
 
