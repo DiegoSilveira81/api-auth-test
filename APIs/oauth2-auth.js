@@ -25,7 +25,7 @@ module.exports = (app) => {
       if (token === 'simulated-oauth2-token') {
         res.json([
           { nome: 'Alice Santos', cpf: '12345678909', contato: '51982700004' },
-          { nome: 'Bruno Lima', cpf: '98765432100', contato: '51982700002' },
+          { nome: 'Bruno Lima', cpf: '98765432100', contato: '51982700002', mother: 'Araci Lima dos Santos', city: 'Porto Alegre' },
         ]);
       } else {
         res.status(403).json({ error: 'access_denied' });
