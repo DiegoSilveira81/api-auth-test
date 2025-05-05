@@ -2,9 +2,9 @@ const { validUser, validPassword } = require('../data/users');
 const { decodeBasicAuth } = require('../utils/auth');
 
 function basicAuthHandler(req, res) {
-    const authHandler = req.headers['authorization'];
+    const authHeader = req.headers['authorization'];
 
-    if (!authHandler || !authHeader.startsWith('Basic ')) {
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
         return res.status(401).json({ message: 'ERRO: Autenticação não encontrada ou inválida'});
     }
 
