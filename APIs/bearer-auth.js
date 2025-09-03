@@ -1,7 +1,7 @@
 module.exports = function (app) {
     const validToken = '1234567890abcdef';
 
-    app.get('/bearer-auth', (req, res) => {
+    app.post('/bearer-auth', (req, res) => {
         const authHeader = req.headers['authorization'];
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,7 +13,7 @@ module.exports = function (app) {
         if (token === validToken) {
             return res.json({
                 id: 2,
-                nome: "Maria Oliveira da Silva",
+                name: "Maria Oliveira da Silva",
                 cpf: "747.969.515-20",
                 email: "maria.da.silva@teste.com",
                 rg: "15.430.951-5",

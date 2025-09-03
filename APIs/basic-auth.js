@@ -16,7 +16,7 @@ module.exports = function (app) {
         if (username === validUser && password === validPassword) {
             return res.json({
                 id: 1,
-                nome: "João Silveira da Silva",
+                name: "João Silveira da Silva",
                 cpf: "02250792089",
                 email: "joao_silveira@teste.com.br"
             });

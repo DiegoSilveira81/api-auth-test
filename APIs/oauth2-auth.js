@@ -1,24 +1,62 @@
+console.log('Arquivo oauth2-auth.js carregado!');
 module.exports = (app) => {
+    console.log('Arquivo oauth2-auth.js carregado!');
     // Endpoint para obter token OAuth2
     app.post('/oauth2/token', (req, res) => {
-      const { client_id, client_secret } = req.body;
-  
-      const validClientId = 'meu-client-id';
-      const validClientSecret = 'meu-client-secret';
-  
-      if (client_id === validClientId && client_secret === validClientSecret) {
-        const token = 'simulated-oauth2-token';
-        res.json({ 
-          access_token: token, 
-          token_type: 'Bearer', 
-          expires_in: 3600 
+      // Verificar autenticação Basic no header
+      const authHeader = req.headers['authorization'];
+      
+      if (!authHeader || !authHeader.startsWith('Basic ')) {
+        return res.status(401).json({ 
+          error: 'invalid_client',
+          error_description: 'Basic authorization header required'
         });
-      } else {
-        res.status(401).json({ 
+      }
+
+      // Decodificar Basic Auth
+      const base64Credentials = authHeader.split(' ')[1];
+      const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+      const [clientId, clientSecret] = credentials.split(':');
+
+      // Pegar parâmetros OAuth2 da query string
+      const { grant_type, username, password } = req.query;
+
+      const validClientId = 'meuClientId';
+      const validClientSecret = 'meuClientSecret';
+      const validUsername = 'usuario_exemplo';
+      const validPassword = 'senha_exemplo';
+
+      // Validar credenciais do cliente
+      if (clientId !== validClientId || clientSecret !== validClientSecret) {
+        return res.status(401).json({ 
           error: 'invalid_client', 
           error_description: 'Client authentication failed' 
         });
       }
+
+      // Validar grant type
+      if (grant_type !== 'password') {
+        return res.status(400).json({
+          error: 'unsupported_grant_type',
+          error_description: 'Only password grant type is supported'
+        });
+      }
+
+      // Validar credenciais do usuário
+      if (username !== validUsername || password !== validPassword) {
+        return res.status(401).json({
+          error: 'invalid_grant',
+          error_description: 'Invalid username or password'
+        });
+      }
+
+      // Retornar token
+      const token = 'simulated-oauth2-token';
+      res.json({ 
+        access_token: token, 
+        token_type: 'Bearer', 
+        expires_in: 3600 
+      });
     });
   
     // Dados simulados completos no formato DSAR
@@ -80,7 +118,7 @@ module.exports = (app) => {
             origin: "update"
           }
         ],
-        document: "374.929.370-83",
+        document: "37492937083",
         name: "Alice Santos"
       },
       {
@@ -163,6 +201,47 @@ module.exports = (app) => {
       }
     ];
   
+    // Endpoint para buscar dados de uma pessoa específica por CPF (para DSAR)
+    app.get('/api/oauth2/:document/data', (req, res) => {
+      console.log("Acessando rota com document:", req.params.document);
+      const authHeader = req.headers['authorization'];
+      const { document } = req.params;
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ 
+          error: 'invalid_token',
+          error_description: 'Authorization header missing or invalid format'
+        });
+      }
+  
+      const token = authHeader.split(' ')[1];
+  
+      if (token !== 'simulated-oauth2-token') {
+        return res.status(403).json({ 
+          error: 'access_denied',
+          error_description: 'Invalid access token'
+        });
+      }
+  
+      // Buscar pessoa pelo documento (aceita com ou sem pontuação)
+      const normalize = doc => doc.replace(/\D/g, '');
+      const person = userData.find(user => normalize(user.document) === normalize(document));
+  
+      if (person) {
+        res.json({
+          success: true,
+          data: person,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(404).json({
+          error: 'not_found',
+          error_description: 'No data found for the provided document',
+          document: document
+        });
+      }
+    });
+
     // Endpoint principal para dados OAuth2 com schema DSAR
     app.get('/api/oauth2/data', (req, res) => {
       const authHeader = req.headers['authorization'];
@@ -177,6 +256,7 @@ module.exports = (app) => {
       const token = authHeader.split(' ')[1];
   
       if (token === 'simulated-oauth2-token') {
+        console.log("caiu aqui no if")
         res.json({
           success: true,
           data: userData,
@@ -184,14 +264,14 @@ module.exports = (app) => {
           timestamp: new Date().toISOString()
         });
       } else {
+        console.log("caiu aqui no else")
         res.status(403).json({ 
           error: 'access_denied',
           error_description: 'Invalid access token'
         });
       }
     });
-  
-    // Endpoint para buscar dados de uma pessoa específica por CPF (para DSAR)
+
     app.get('/api/oauth2/dsar/:document', (req, res) => {
       const authHeader = req.headers['authorization'];
       const { document } = req.params;
@@ -212,8 +292,9 @@ module.exports = (app) => {
         });
       }
   
-      // Buscar pessoa pelo documento
-      const person = userData.find(user => user.document === document);
+  // Buscar pessoa pelo documento (aceita com ou sem pontuação)
+  const normalize = doc => doc.replace(/\D/g, '');
+  const person = userData.find(user => normalize(user.document) === normalize(document));
   
       if (person) {
         res.json({
