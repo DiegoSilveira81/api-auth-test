@@ -19,6 +19,7 @@ module.exports = function (app) {
                 nome: "João Silveira da Silva",
                 cpf: "02250792089",
                 email: "joao_silveira@teste.com.br"
+                address: "Rua Dois Irmãos, 1765 - Jardim da paz"
             });
         }
 
