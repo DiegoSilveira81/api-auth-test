@@ -82,10 +82,66 @@ O servidor iniciará em `http://localhost:6666` (pode ajustar a porta no `index.
 Todos os endpoints de dados retornam o seguinte JSON:
 
 ```json
-[
-  { "nome": "Alice Santos", "cpf": "12345678909" },
-  { "nome": "Bruno Lima", "cpf": "98765432100" }
-]
+{
+        recordType: "customer",
+        birthday: "1985-03-15",
+        education: "Superior Completo",
+        father: "João Santos Silva",
+        gender: "Feminino",
+        maritalStatus: "Casada",
+        mother: "Maria Santos",
+        age: 38,
+        contactAddresses: [
+          {
+            createdDate: "2023-01-15T10:30:00Z",
+            street: "Rua das Flores, 123, Apto 45",
+            city: "Porto Alegre",
+            state: "Rio Grande do Sul",
+            zipCode: "90010-000",
+            country: "Brasil",
+            origin: "registration",
+            type: "residential"
+          },
+          {
+            createdDate: "2023-06-20T14:15:00Z",
+            street: "Av. Ipiranga, 6681, Sala 1001",
+            city: "Porto Alegre",
+            state: "Rio Grande do Sul",
+            zipCode: "90619-900",
+            country: "Brasil",
+            origin: "update",
+            type: "commercial"
+          }
+        ],
+        contactPhones: [
+          {
+            createdDate: "2023-01-15T10:30:00Z",
+            number: "51982700004",
+            type: "mobile",
+            origin: "registration"
+          },
+          {
+            createdDate: "2023-03-10T16:45:00Z",
+            number: "5133334455",
+            type: "landline",
+            origin: "update"
+          }
+        ],
+        contactEmails: [
+          {
+            createdDate: "2023-01-15T10:30:00Z",
+            email: "alice.santos@email.com",
+            origin: "registration"
+          },
+          {
+            createdDate: "2023-04-22T09:20:00Z",
+            email: "alice.trabalho@empresa.com",
+            origin: "update"
+          }
+        ],
+        document: "374.929.370-83",
+        name: "Alice Santos"
+      },
 ```
 
 > ⚠️ Os CPFs são válidos segundo o algoritmo de verificação, mas são fictícios.
