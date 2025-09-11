@@ -1,8 +1,17 @@
 console.log('Arquivo oauth2-auth.js carregado!');
 module.exports = (app) => {
     console.log('Arquivo oauth2-auth.js carregado!');
+    
     // Endpoint para obter token OAuth2
     app.post('/oauth2/token', (req, res) => {
+      console.log('=== DEBUG OAUTH2 TOKEN ===');
+      console.log('req.body:', req.body);
+      console.log('req.query:', req.query);
+      console.log('req.headers:', req.headers);
+      console.log('Content-Type:', req.headers['content-type']);
+      console.log('Raw body available:', !!req.rawBody);
+      console.log('========================');
+      
       // Verificar autenticação Basic no header
       const authHeader = req.headers['authorization'];
       
@@ -18,46 +27,53 @@ module.exports = (app) => {
       const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
       const [clientId, clientSecret] = credentials.split(':');
 
-      // Pegar parâmetros OAuth2 da query string
-      const { grant_type, username, password } = req.query;
+      // CORREÇÃO: Pegar parâmetros OAuth2 do BODY (não query)
+      const { grant_type, username, password, scope } = req.body;
 
-      const validClientId = 'meuClientId';
-      const validClientSecret = 'meuClientSecret';
-      const validUsername = 'usuario_exemplo';
-      const validPassword = 'senha_exemplo';
+        const validClientId = 'meuClientId';
+        const validClientSecret = 'meuClientSecret';
+        const validUsername = 'usuario_exemplo';
+        const validPassword = 'senha_exemplo';
 
-      // Validar credenciais do cliente
-      if (clientId !== validClientId || clientSecret !== validClientSecret) {
-        return res.status(401).json({ 
-          error: 'invalid_client', 
-          error_description: 'Client authentication failed' 
+        console.log('Dados extraídos:', { grant_type, username, password, scope, clientId, clientSecret });
+
+        // Validar credenciais do cliente
+        if (clientId !== validClientId || clientSecret !== validClientSecret) {
+          return res.status(401).json({ 
+            error: 'invalid_client', 
+            error_description: 'Client authentication failed' 
+          });
+        }
+
+        // CORREÇÃO: Validar grant type - ACEITAR AMBOS para maior flexibilidade
+        if (grant_type !== 'password' && grant_type !== 'client_credentials') {
+          return res.status(400).json({
+            error: 'unsupported_grant_type',
+            error_description: 'Only password and client_credentials grant types are supported'
+          });
+        }
+
+        // Se for password grant, validar credenciais do usuário
+        if (grant_type === 'password') {
+          if (username !== validUsername || password !== validPassword) {
+            return res.status(401).json({
+              error: 'invalid_grant',
+              error_description: 'Invalid username or password'
+            });
+          }
+        }
+
+        // Retornar token para ambos os grant types
+        const token = 'simulated-oauth2-token';
+        console.log('Token gerado com sucesso!');
+        res.json({ 
+          access_token: token, 
+          token_type: 'Bearer', 
+          expires_in: 3600,
+          scope: scope || 'read'
         });
       }
-
-      // Validar grant type
-      if (grant_type !== 'password') {
-        return res.status(400).json({
-          error: 'unsupported_grant_type',
-          error_description: 'Only password grant type is supported'
-        });
-      }
-
-      // Validar credenciais do usuário
-      if (username !== validUsername || password !== validPassword) {
-        return res.status(401).json({
-          error: 'invalid_grant',
-          error_description: 'Invalid username or password'
-        });
-      }
-
-      // Retornar token
-      const token = 'simulated-oauth2-token';
-      res.json({ 
-        access_token: token, 
-        token_type: 'Bearer', 
-        expires_in: 3600 
-      });
-    });
+    );
   
     // Dados simulados completos no formato DSAR
     const userData = [
@@ -201,7 +217,48 @@ module.exports = (app) => {
       }
     ];
   
-    // Endpoint para buscar dados de uma pessoa específica por CPF (para DSAR)
+    // Endpoint para buscar dados por document via POST - Para compatibilidade
+    app.post('/api/oauth2/data/:document', (req, res) => {
+      console.log("POST: Acessando rota com document:", req.params.document);
+      const authHeader = req.headers['authorization'];
+      const { document } = req.params;
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ 
+          error: 'invalid_token',
+          error_description: 'Authorization header missing or invalid format'
+        });
+      }
+  
+      const token = authHeader.split(' ')[1];
+  
+      if (token !== 'simulated-oauth2-token') {
+        return res.status(403).json({ 
+          error: 'access_denied',
+          error_description: 'Invalid access token'
+        });
+      }
+  
+      // Buscar pessoa pelo documento (aceita com ou sem pontuação)
+      const normalize = doc => doc.replace(/\D/g, '');
+      const person = userData.find(user => normalize(user.document) === normalize(document));
+  
+      if (person) {
+        res.json({
+          success: true,
+          data: person,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(404).json({
+          error: 'not_found',
+          error_description: 'No data found for the provided document',
+          document: document
+        });
+      }
+    });
+
+    // Endpoint para buscar dados de uma pessoa específica por CPF (para DSAR) - GET
     app.get('/api/oauth2/:document/data', (req, res) => {
       console.log("Acessando rota com document:", req.params.document);
       const authHeader = req.headers['authorization'];
@@ -256,7 +313,7 @@ module.exports = (app) => {
       const token = authHeader.split(' ')[1];
   
       if (token === 'simulated-oauth2-token') {
-        console.log("caiu aqui no if")
+        console.log("Token válido - retornando dados");
         res.json({
           success: true,
           data: userData,
@@ -264,7 +321,7 @@ module.exports = (app) => {
           timestamp: new Date().toISOString()
         });
       } else {
-        console.log("caiu aqui no else")
+        console.log("Token inválido");
         res.status(403).json({ 
           error: 'access_denied',
           error_description: 'Invalid access token'
@@ -292,10 +349,10 @@ module.exports = (app) => {
         });
       }
   
-  // Buscar pessoa pelo documento (aceita com ou sem pontuação)
-  const normalize = doc => doc.replace(/\D/g, '');
-  const person = userData.find(user => normalize(user.document) === normalize(document));
-  
+      // Buscar pessoa pelo documento (aceita com ou sem pontuação)
+      const normalize = doc => doc.replace(/\D/g, '');
+      const person = userData.find(user => normalize(user.document) === normalize(document));
+      
       if (person) {
         res.json({
           success: true,
@@ -327,7 +384,7 @@ module.exports = (app) => {
       if (token === 'simulated-oauth2-token') {
         res.json({
           valid: true,
-          client_id: 'meu-client-id',
+          client_id: 'meuClientId',
           expires_in: 3600,
           scope: 'read'
         });
@@ -338,4 +395,4 @@ module.exports = (app) => {
         });
       }
     });
-  };
+  }
