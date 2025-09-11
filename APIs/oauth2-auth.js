@@ -214,7 +214,17 @@ module.exports = (app) => {
         ],
         document: "156.184.220-69",
         name: "Carla Oliveira"
-      }
+      },
+      {
+          recordType: "null",
+          birthday: "04/12/1993",
+          education: "Mestrado",
+          father: "Nao informado",
+          gender: "Male",
+          mother: "Alice Perereira dos Santos"
+      },
+      document: "02710278006"
+      name: "Joanna D'arc"
     ];
   
     // Endpoint para buscar dados por document via POST - Para compatibilidade
