@@ -223,8 +223,6 @@ module.exports = (app) => {
           gender: "Male",
           mother: "Alice Perereira dos Santos"
       },
-      document: "02710278006"
-      name: "Joanna D'arc"
     ];
   
     // Endpoint para buscar dados por document via POST - Para compatibilidade
